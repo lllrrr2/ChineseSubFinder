@@ -1,10 +1,5 @@
 <template>
-  <span
-    v-if="
-      latestVersion?.tag_name && systemState.systemInfo && latestVersion.tag_name !== systemState.systemInfo?.version
-    "
-    @click="visible = true"
-  >
+  <span v-if="hasNewVersion" @click="visible = true">
     <slot v-if="$slots.default"></slot>
     <q-badge v-else class="cursor-pointer" label="new" title="有新的版本更新" />
   </span>
@@ -47,7 +42,10 @@
             <div>
               参考教程
               <!-- eslint-disable-next-line max-len -->
-              <a href="https://github.com/allanpk716/ChineseSubFinder/blob/master/docker/readme.md" target="_blank">
+              <a
+                href="https://github.com/ChineseSubFinder/ChineseSubFinder/blob/master/docker/readme.md"
+                target="_blank"
+              >
                 Docker部署教程
               </a>
             </div>
@@ -68,7 +66,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import Markdown from 'components/Markdown';
 import { systemState } from 'src/store/systemState';
 import { LocalStorage } from 'quasar';
@@ -77,14 +75,21 @@ const latestVersion = ref(LocalStorage.getItem('latestVersion') ?? null);
 const visible = ref(false);
 const tab = ref('log');
 
+const hasNewVersion = computed(() => {
+  const v = systemState.systemInfo?.version.replace(/\s+(L|l)ite$/, '');
+  return latestVersion.value?.tag_name && v && latestVersion.value.tag_name !== v;
+});
+
 const getLatestVersion = async () => {
   try {
-    const data = await fetch('https://api.github.com/repos/allanpk716/chinesesubfinder/releases/latest').then((res) => {
-      if (res.ok) {
-        return res.json();
+    const data = await fetch('https://api.github.com/repos/ChineseSubFinder/ChineseSubFinder/releases/latest').then(
+      (res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        return Promise.reject(res);
       }
-      return Promise.reject(res);
-    });
+    );
     latestVersion.value = data;
     // 接口请求速率过高有可能403，本地存一份
     LocalStorage.set('latestVersion', data);

@@ -8,6 +8,8 @@ class LibraryApi extends BaseApi {
 
   getList = () => this.http('/v1/video/list/video_main_list');
 
+  getImdbId = (data) => this.http('/v1/preview/video_f_path_2_imdb_info', data, 'POST');
+
   downloadSubtitle = (data) => this.http(`/v1/video/list/add`, data, 'POST');
 
   getMoviePoster = (data) => this.http(`/v1/video/list/movie_poster`, data, 'POST');
@@ -35,18 +37,22 @@ class LibraryApi extends BaseApi {
 
   getSubTitleQueueList = () => this.http(`/v1/subtitles/list_manual_upload_2_local_job`);
 
-  addPreviewJob = (data) => this.http(`/v1/preview/add`, data, 'POST');
+  // addPreviewJob = (data) => this.http(`/v1/preview/add`, data, 'POST');
+  //
+  // getPreviewJobs = () => this.http(`/v1/preview/list`);
+  //
+  // checkIsPreviewInQueue = (data) => this.http(`/v1/preview/is_in_queue`, data, 'POST');
+  //
+  // getPreviewJobResult = (data) => this.http(`/v1/preview/job_result`, data, 'POST');
+  //
+  // getPreviewDistInfo = (data) => this.http(`/v1/preview/export_info`, data, 'POST');
 
-  getPreviewJobs = () => this.http(`/v1/preview/list`);
-
-  checkIsPreviewInQueue = (data) => this.http(`/v1/preview/is_in_queue`, data, 'POST');
-
-  getPreviewJobResult = (data) => this.http(`/v1/preview/job_result`, data, 'POST');
-
-  getPreviewDistInfo = (data) => this.http(`/v1/preview/export_info`, data, 'POST');
+  getSearchSubtitleInfo = (data) => this.http(`/v1/preview/search_other_web`, data, 'POST');
 
   cleanAllPreviewJobData = () => this.http(`/v1/preview/clean_up`, {}, 'POST');
 
   getVideoM3u8 = (videoPath) => this.http(`/v1/preview/playlist/${encode(encodeURIComponent(videoPath))}`);
+
+  getUploadInfo = (data) => this.http(`/v1/subtitles/get_generate_upload_url_info`, data, 'POST');
 }
 export default new LibraryApi();

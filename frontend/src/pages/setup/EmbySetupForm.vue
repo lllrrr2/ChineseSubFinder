@@ -12,10 +12,7 @@
             dense
             :rules="[
               (val) => !!val || '不能为空',
-              (val) =>
-                val.match(
-                  /^(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?$/
-                ) || '请输入正确的URL',
+              (val) => val.match(/^https?:\/\/\w+(\.\w+)*(:[0-9]+)?\/?(\/[.\w]*)*$/) || '请输入正确的URL',
             ]"
           />
         </q-item-section>
@@ -63,5 +60,5 @@
 </template>
 
 <script setup>
-import { setupState } from 'pages/setup/useSetup';
+import { setupState } from 'pages/setup/use-setup';
 </script>

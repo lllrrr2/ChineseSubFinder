@@ -27,10 +27,11 @@
 
 <script setup>
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { useQuasar } from 'quasar';
 import { onMounted, ref } from 'vue';
 import useEventBus from 'src/composables/use-event-bus';
+import { checkIsVideoLocked } from 'pages/library/use-library';
 
 const props = defineProps({
   path: String,
@@ -42,13 +43,12 @@ const $q = useQuasar();
 const isSkipped = ref(null);
 
 const getIsSkipped = async () => {
-  const [res] = await LibraryApi.getSkipInfo({
+  isSkipped.value = await checkIsVideoLocked({
     video_type: props.videoType,
     physical_video_file_full_path: props.path,
     is_bluray: false,
     is_skip: true,
   });
-  isSkipped.value = res.is_skip;
 };
 
 const skip = async () => {
@@ -59,10 +59,14 @@ const skip = async () => {
     persistent: true,
   }).onOk(async () => {
     const [res] = await LibraryApi.setSkipInfo({
-      video_type: props.videoType,
-      physical_video_file_full_path: props.path,
-      is_bluray: false,
-      is_skip: !isSkipped.value,
+      video_skip_infos: [
+        {
+          video_type: props.videoType,
+          physical_video_file_full_path: props.path,
+          is_bluray: false,
+          is_skip: !isSkipped.value,
+        },
+      ],
     });
     if (res) {
       SystemMessage.success('操作成功');
@@ -71,7 +75,13 @@ const skip = async () => {
   });
 };
 
-useEventBus(`refresh-skip-status-${props.path}`, getIsSkipped);
+useEventBus(`refresh-skip-status-${props.path}`, (flag) => {
+  if (flag !== undefined) {
+    isSkipped.value = flag;
+  } else {
+    getIsSkipped();
+  }
+});
 
 onMounted(() => {
   getIsSkipped();

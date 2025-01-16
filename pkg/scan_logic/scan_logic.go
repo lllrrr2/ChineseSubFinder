@@ -1,14 +1,12 @@
 package scan_logic
 
 import (
-	"path/filepath"
 	"sync"
 
-	PTN "github.com/middelink/go-parse-torrent-name"
 	"github.com/sirupsen/logrus"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 )
 
 type ScanLogic struct {
@@ -47,14 +45,8 @@ func (s *ScanLogic) Get(videoType int, videoPath string) bool {
 		uid = models.GenerateUID4Movie(videoPath)
 	} else {
 		// 电视剧
-		var parse *PTN.TorrentInfo
-		parse, err := PTN.Parse(videoPath)
-		if err != nil {
-			s.l.Errorln("scan_logic.Get.PTN.Parse", err)
-			return true
-		}
-		dirFPath := filepath.Dir(filepath.Dir(videoPath))
-		uid = models.GenerateUID4Series(dirFPath, parse.Season, parse.Episode)
+		skipInfo := models.NewSkipScanInfoBySeriesEx(videoPath, true)
+		uid = skipInfo.UID
 	}
 
 	value, found := s.scanLogicMap.Load(uid)

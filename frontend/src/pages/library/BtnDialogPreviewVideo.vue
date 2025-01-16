@@ -1,5 +1,5 @@
 <template>
-  <q-btn color="primary" icon="smart_display" flat dense v-bind="$attrs" @click="visible = true" title="预览" />
+  <q-btn color="primary" icon="smart_display" flat dense v-bind="$attrs" @click="handleBtnClick" title="预览" />
 
   <q-dialog
     v-model="visible"
@@ -46,23 +46,37 @@ import LibraryApi from 'src/api/LibraryApi';
 import Artplayer from 'components/Artplayer';
 import config from 'src/config';
 import { useQuasar } from 'quasar';
-import { getUrl } from 'pages/library/useLibrary';
+import { getUrl } from 'pages/library/use-library';
 import { userState } from 'src/store/userState';
 
 const $q = useQuasar();
 
 const props = defineProps({
   path: String,
-  subList: {
+  onBtnClick: Function,
+  subtitleUrlList: {
     type: Array,
     default: () => [],
   },
+  subtitleType: String,
 });
 
 const visible = ref(false);
 const artInstance = ref(null);
 const selectedSub = ref(null);
 const checkResult = ref(null);
+
+const handleBtnClick = async () => {
+  if (props.onBtnClick) {
+    props.onBtnClick((flag) => {
+      if (flag) {
+        visible.value = true;
+      }
+    });
+  } else {
+    visible.value = true;
+  }
+};
 
 const handleGetArtInstance = (instance) => {
   artInstance.value = instance;
@@ -75,7 +89,7 @@ const showSelectSubtitleDialog = () => {
     options: {
       type: 'radio',
       model: selectedSub.value,
-      items: props.subList.map((e) => ({ label: e, value: e })),
+      items: props.subtitleUrlList.map((e) => ({ label: e, value: e })),
     },
     cancel: true,
     persistent: true,
@@ -85,57 +99,63 @@ const showSelectSubtitleDialog = () => {
   });
 };
 
-const artOption = computed(() => ({
-  autoplay: true,
-  autoSize: true,
-  url: `${config.BACKEND_URL}/v1/preview/playlist/${encode(encodeURIComponent(props.path))}`,
-  subtitle: {
-    url: getUrl(selectedSub.value),
-  },
-  type: 'm3u8',
-  customType: {
-    m3u8(video, url) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.config.xhrSetup = (xhr) => {
-          const { accessToken } = userState;
-          xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-        };
-        hls.loadSource(url);
-        hls.attachMedia(video);
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-      } else {
-        // art.notice.show = '不支持播放格式：m3u8';
-      }
+const artOption = computed(() => {
+  const options = {
+    autoplay: true,
+    autoSize: true,
+    url: `${config.BACKEND_URL}/v1/preview/playlist/${encode(encodeURIComponent(props.path))}`,
+    subtitle: {
+      url: selectedSub.value.startsWith('blob') ? selectedSub.value : getUrl(selectedSub.value),
     },
-  },
-  controls:
-    props.subList.length === 0
-      ? []
-      : [
-          {
-            disable: false,
-            name: 'button',
-            index: 10,
-            position: 'right',
-            html: '选择字幕',
-            tooltip: '选择字幕',
-            style: {
-              color: 'red',
+    type: 'm3u8',
+    customType: {
+      m3u8(video, url) {
+        if (Hls.isSupported()) {
+          const hls = new Hls();
+          hls.config.xhrSetup = (xhr) => {
+            const { accessToken } = userState;
+            xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+          };
+          hls.loadSource(url);
+          hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+        } else {
+          // art.notice.show = '不支持播放格式：m3u8';
+        }
+      },
+    },
+    controls:
+      props.subtitleUrlList.length === 0
+        ? []
+        : [
+            {
+              disable: false,
+              name: 'button',
+              index: 10,
+              position: 'right',
+              html: '选择字幕',
+              tooltip: '选择字幕',
+              style: {
+                color: 'red',
+              },
+              click() {
+                showSelectSubtitleDialog();
+              },
+              mounted() {
+                // console.log('自定义按钮挂载完成1');
+              },
             },
-            click() {
-              showSelectSubtitleDialog();
-            },
-            mounted() {
-              // console.log('自定义按钮挂载完成1');
-            },
-          },
-        ],
-}));
+          ],
+  };
+  if (props.subtitleType) {
+    options.subtitle.type = props.subtitleType;
+  }
+  return options;
+});
 
 const handleBeforeShow = async () => {
-  selectedSub.value = props.subList?.[0];
+  selectedSub.value = props.subtitleUrlList?.[0];
   const [res, err] = await LibraryApi.getVideoM3u8(props.path);
   checkResult.value = res || err;
 };

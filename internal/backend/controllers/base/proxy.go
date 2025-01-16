@@ -1,21 +1,21 @@
 package base
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/subtitle_best"
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
-	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/csf"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
+	subSupplier "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
 	"github.com/gin-gonic/gin"
 )
@@ -79,9 +79,10 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		subSupplierHub.AddSubSupplier(assrt.NewSupplier(cb.fileDownloader))
 	}
 
-	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
-		// 如果开启了分享字幕功能，那么就可以开启这个功能
-		subSupplierHub.AddSubSupplier(csf.NewSupplier(cb.fileDownloader))
+	if settings.Get().SubtitleSources.SubtitleBestSettings.Enabled == true &&
+		settings.Get().SubtitleSources.SubtitleBestSettings.ApiKey != "" {
+		// 如果开启了 SubtitleBest 字幕源，则需要测试 ASSRt 的代理
+		subSupplierHub.AddSubSupplier(subtitle_best.NewSupplier(cb.fileDownloader))
 	}
 
 	outStatus := subSupplierHub.CheckSubSiteStatus()

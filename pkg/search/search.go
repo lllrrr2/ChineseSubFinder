@@ -1,23 +1,22 @@
 package search
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
-	PTN "github.com/middelink/go-parse-torrent-name"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/filter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sort_things"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/filter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sort_things"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/sirupsen/logrus"
 )
@@ -114,7 +113,7 @@ func MatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 					continue
 				}
 
-				if filter.SkipFileInfo(l, curFile) == true {
+				if filter.SkipFileInfo(l, curFile, fullPath) == true {
 					continue
 				}
 
@@ -147,9 +146,9 @@ func TVNfo(l *logrus.Logger, dir string) ([]string, error) {
 				continue
 			} else {
 
-				if filter.SkipFileInfo(l, curFile) == true {
-					continue
-				}
+				//if filter.SkipFileInfo(l, curFile, fullPath) == true {
+				//	continue
+				//}
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}
@@ -177,7 +176,7 @@ func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo
 			return nil
 		}
 
-		if filter.SkipFileInfo(l, d) == true {
+		if filter.SkipFileInfo(l, d, path) == true {
 			return nil
 		}
 
@@ -219,16 +218,20 @@ func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo
 		for _, oneVideo := range videos {
 
 			videoName := strings.ReplaceAll(filepath.Base(oneVideo), filepath.Ext(oneVideo), "")
-			parse, err := PTN.Parse(oneVideo)
-			if err != nil {
-				l.Errorln("SeriesAllEpsAndSubtitles.PTN.Parse", err)
+
+			skipInfo := models.NewSkipScanInfoBySeriesEx(oneVideo, true)
+
+			if skipInfo.Season() == -1 || skipInfo.Eps() == -1 {
+				// 无法解析的视频，跳过
+				l.Errorln("SeriesAllEpsAndSubtitles, Skip UnParse Video:", oneVideo)
 				continue
 			}
+
 			nowOneVideoInfo := backend.OneVideoInfo{
 				Name:         filepath.Base(oneVideo),
 				VideoFPath:   oneVideo,
-				Season:       parse.Season,
-				Episode:      parse.Episode,
+				Season:       skipInfo.Season(),
+				Episode:      skipInfo.Eps(),
 				SubFPathList: make([]string, 0),
 				SubUrlList:   make([]string, 0),
 			}

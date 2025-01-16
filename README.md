@@ -1,78 +1,69 @@
 # ChineseSubFinder
 
-本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
+本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕，在**第三方**的网站或者接口的下载。
 
-> CSF 使用交流目前只有一个 telegram 小组，https://t.me/chinesesubfinder 。
->
-> 个人建议是以使用和讨论为主，bug 的反馈最好去 issue 按模板反馈和提出问题，也好有一个地方追溯。
+> 因为 telegram 很长时间回不去（+86原因），相应的聊天组已经污染，也无更多精力维护，已经解散。CSF 后续暂时无计划组建官方的聊天组。请自行辨别相关信息，谨防诈骗。
 
+## 停更通知
 
-> 暂时下线 subhd、zimuku 的字幕下载支持，再次上线时间不定，请更新到 v0.33 版本及其以上，新增的 a4k 和 csf 字幕源（在“实验室”界面开启“共享字幕”才会使用）也许可以暂时缓解下载需求。
+[停更公告](SeeYou/README.md)
 
 ## 前言
 
-后续会长期支持两个方向的 Docker 镜像，差异见 [Docker 部署教程](docker/readme.md)
+移除全功能版本，以后都是轻量级（Lite），tag 继续保留，实则都有是一个。不再直接支持某些字幕网站的下载（人多了，对方服务器扛不住），请使用第三方的字幕下载服务，subtitle best，具体请进入程序后去设置界面，会有引导。
 
-1. 全功能版本 `allanpk716/chinesesubfinder:latest`
-2. 轻量化版本 `allanpk716/chinesesubfinder:latest-lite`
-
-如果使用了国内 Docker 镜像源，可能 latest 无法正确拉取到最新，那么请指定具体的 tag 去拉取，举例：
-
-1. `allanpk716/chinesesubfinder:v0.33.0`
-2. `allanpk716/chinesesubfinder:v0.33.0-lite`
-
-最新的版本可以查看 [Docker Hub](https://hub.docker.com/repository/docker/allanpk716/chinesesubfinder) ，如果不在 telegram 群内，没有特殊的需求请不要选择 **Beta** 版本使用。
+最新的版本可以查看 [Docker Hub](https://hub.docker.com/repository/docker/allanpk716/chinesesubfinder)，没有特殊的需求请不要选择 **Beta** 版本使用。
 
 ## 前置要求
 
 如果想顺利的用起来，还是对电影、连续剧的目录有一定的要求的。见文档:
 
-- [电影的推荐目录结构](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E7%94%B5%E5%BD%B1%E5%92%8C%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E7%A4%BA%E4%BE%8B.md)
-- [连续剧目录结构要求](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%A6%81%E6%B1%82.md)
+- [电影的推荐目录结构](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E7%94%B5%E5%BD%B1%E5%92%8C%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E7%A4%BA%E4%BE%8B.md)
+- [连续剧目录结构要求](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%A6%81%E6%B1%82.md)
 
 ## How to use
 
 ### 如何部署
 
 - [Docker 部署教程](docker/readme.md)
-- [如何在 Windows 上使用](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/v0.20教程/01.如何在Windows上使用.md)
+- [如何在 Windows 上使用](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/v0.20教程/01.如何在Windows上使用.md)
 - [Docker ChineseSubFinder--中文字幕自动下载 | sleele 的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
 
 ### 如何使用
 
-* [使用教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/使用教程)
-* [传参启动（v0.41.x 之后才支持）](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/传参启动/传参启动.md)
+* [使用教程](https://github.com/ChineseSubFinder/ChineseSubFinder/tree/docs/DesignFile/使用教程)
+* [传参启动（v0.41.x 之后才支持）](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/传参启动/传参启动.md)
 
 ### API 文档文档
 
-- [对外的 http api](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1),以及[示例](https://github.com/allanpk716/ChineseSubFinder/issues/336)
+- [对外的 http api](https://github.com/ChineseSubFinder/ChineseSubFinder/tree/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1),以及[示例](https://github.com/ChineseSubFinder/ChineseSubFinder/issues/336)
 
 ### 高阶设置
 
-- [字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md)，有待更新 v0.20.x 对应的设置
+- [字幕时间轴校正 V2](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md)，有待更新 v0.20.x 对应的设置
 
 建议了解的文档：
 
-- [关于字幕名称命名格式说明](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%85%B3%E4%BA%8E%E5%AD%97%E5%B9%95%E5%90%8D%E7%A7%B0%E5%91%BD%E5%90%8D%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E.md)
+- [关于字幕名称命名格式说明](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E5%85%B3%E4%BA%8E%E5%AD%97%E5%B9%95%E5%90%8D%E7%A7%B0%E5%91%BD%E5%90%8D%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E.md)
 
-如果文档没有及时更新，或者描述含糊、歧义的，欢迎提 [ISSUES](https://github.com/allanpk716/ChineseSubFinder/issues)。
+如果文档没有及时更新，或者描述含糊、歧义的，欢迎提 [ISSUES](https://github.com/ChineseSubFinder/ChineseSubFinder/issues)。
 
 ## 问题列表
 
-如果遇到问题了，可以先看看这里总结的问题，如果未能解决，依然可以继续提问。[问题列表](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E9%97%AE%E9%A2%98%E5%88%97%E8%A1%A8.md)
+如果遇到问题了，可以先看看这里总结的问题，如果未能解决，依然可以继续提问。[问题列表](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E9%97%AE%E9%A2%98%E5%88%97%E8%A1%A8.md)
 
 ## 其他文档
 
-- [削刮器的推荐设置](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%89%8A%E5%88%AE%E5%99%A8%E7%9A%84%E6%8E%A8%E8%8D%90%E8%AE%BE%E7%BD%AE.md)
-- [如何判断视频是否需要下载、更新字幕的](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E8%A7%86%E9%A2%91%E6%98%AF%E5%90%A6%E9%9C%80%E8%A6%81%E4%B8%8B%E8%BD%BD%E3%80%81%E6%9B%B4%E6%96%B0%E5%AD%97%E5%B9%95%E7%9A%84.md)
-- [设计](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%AE%BE%E8%AE%A1.md)
-- [字幕时间轴校正功能实现解析(有待补全)](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/字幕时间轴校正功能实现解析/字幕时间轴校正功能实现解析.md)
+- [削刮器的推荐设置](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E5%89%8A%E5%88%AE%E5%99%A8%E7%9A%84%E6%8E%A8%E8%8D%90%E8%AE%BE%E7%BD%AE.md)
+- [如何判断视频是否需要下载、更新字幕的](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E8%A7%86%E9%A2%91%E6%98%AF%E5%90%A6%E9%9C%80%E8%A6%81%E4%B8%8B%E8%BD%BD%E3%80%81%E6%9B%B4%E6%96%B0%E5%AD%97%E5%B9%95%E7%9A%84.md)
+- [设计](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E8%AE%BE%E8%AE%A1.md)
+- [字幕时间轴校正功能实现解析(有待补全)](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/字幕时间轴校正功能实现解析/字幕时间轴校正功能实现解析.md)
 
 ## 如何编译此项目
 
-首选需要编译 Web 部分，见 frontend/README.md
+* 首选需要编译 Web 部分，见 frontend/README.md
 
-然后才能编译可执行程序部分
+* 然后才能编译可执行程序部分
 
 > 如果是 Windows，那么可以从这里下载 [MinGW-w64 - for 32 and 64 bit Windows - Browse /Toolchains targetting Win64 at SourceForge.net](https://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/)
 >
@@ -97,31 +88,15 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 跨平台是没有问题的，作者现在就是 Windows 开发的。因为手头没得 Mac OS ，也懒得整虚拟机去试，应该也是可以直接玩起来的。
 
-## 如何参与开发
-
-建议看 [关于中文字幕下载器的中长期规划讨论、求助](https://github.com/allanpk716/ChineseSubFinder/issues/20)，里面提及了后续的规划，需要大家的讨论。
-
-目前阶段参与开发可以会遇到项目大范围重构，导致合并代码困难的问题。
-
-可以协助规划和设计 Web 设置页面的需求，比如 api 接口设计什么的。
-
-正式版本发布后，参与开发可以更加容易一些。
-
 ## 版本
 
-请务必使用最新版本，这里忘记（懒得）写更新记录的话，可以去 [Releases](https://github.com/allanpk716/ChineseSubFinder/releases) 查看最新到什么版本了。
+请务必使用最新版本，这里忘记（懒得）写更新记录的话，可以去 [Releases](https://github.com/ChineseSubFinder/ChineseSubFinder/releases) 查看最新到什么版本了。
 
 > 因为业余时间不多，都是断断续续做的，基本我只能记得最近两个版本的功能···
 
 - v0.42.x 新增，支持手动上传字幕，以及在 Web 界面即可预览字幕效果，重写“库”的刷新逻辑。 -- 2022年10月31日
 - ···
 - 完成初版，仅仅支持电影的字幕下载 -- 2021 年 6 月 13 日
-
-## TODO
-
-见 [ChineseSubProject](https://github.com/users/allanpk716/projects/2)
-
-> 业余时间有限，没空更新这个 TODO，有什么想要的直接提 issues，或者加 TG 咨询。
 
 ## 感谢
 

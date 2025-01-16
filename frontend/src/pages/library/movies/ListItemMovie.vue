@@ -1,13 +1,13 @@
 <template>
   <q-card flat square>
     <div class="area-cover q-mb-sm relative-position">
-      <div v-if="!posterInfo?.url" style="width: 160px; height: 200px"></div>
+      <div v-if="!posterInfo?.url" :style="{ width, height: coverHeight }"></div>
       <q-img
         v-else
         :src="getUrl(posterInfo.url)"
         class="content-width bg-grey-2"
         no-spinner
-        style="width: 160px; height: 200px"
+        :style="{ width, height: coverHeight }"
         fit="cover"
       />
     </div>
@@ -16,7 +16,7 @@
       <btn-dialog-preview-video
         v-if="hasSubtitle"
         size="sm"
-        :sub-list="detialInfo?.sub_url_list"
+        :subtitle-url-list="detialInfo?.sub_url_list"
         :path="data.video_f_path"
       />
 
@@ -40,12 +40,30 @@
                 <q-item-section class="overflow-hidden ellipsis" :title="item.split`(/\/|\\/)`.pop()">
                   <a class="text-primary" :href="getUrl(item)" target="_blank">{{ item.split(/\/|\\/).pop() }}</a>
                 </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    color="primary"
+                    round
+                    flat
+                    dense
+                    icon="construction"
+                    :title="`字幕时间轴校准${
+                      !formModel.advanced_settings.fix_time_line
+                        ? '（此功能需要在进阶设置里开启自动校正字幕时间轴，检测到你当前尚未开启此选项）'
+                        : ''
+                    }`"
+                    @click="doFixSubtitleTimeline(item)"
+                    :disable="!formModel.advanced_settings.fix_time_line"
+                  ></q-btn>
+                </q-item-section>
               </q-item>
             </q-list>
           </q-popup-proxy>
         </q-btn>
         <q-btn v-else color="grey" size="sm" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
       </div>
+
+      <btn-dialog-search-subtitle :path="props.data.video_f_path" is-movie />
       <q-space />
 
       <btn-upload-subtitle :path="data.video_f_path" dense size="sm" />
@@ -57,7 +75,7 @@
         flat
         dense
         icon="download_for_offline"
-        title="下载字幕"
+        title="添加到下载队列"
         @click="downloadSubtitle"
         size="sm"
       ></q-btn>
@@ -72,16 +90,26 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
 import { useQuasar } from 'quasar';
-import { getUrl, subtitleUploadList } from 'pages/library/useLibrary';
+import { doFixSubtitleTimeline, getUrl, subtitleUploadList } from 'pages/library/use-library';
 import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
+import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
+import { formModel } from 'pages/settings/use-settings';
 
 const props = defineProps({
   data: Object,
+  width: {
+    type: String,
+    default: '160px',
+  },
+  coverHeight: {
+    type: String,
+    default: '200px',
+  },
 });
 
 const $q = useQuasar();
@@ -159,7 +187,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .content-width {
-  width: 160px;
+  width: v-bind(width);
 }
 .text-ellipsis-line-2 {
   height: 40px;

@@ -1,16 +1,17 @@
 package subparser
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"math"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 )
 
 type FileInfo struct {
@@ -191,6 +192,10 @@ func (f FileInfo) GetEndTime() time.Time {
 func (f FileInfo) GetNumFrames() int {
 
 	return int(math.Abs((pkg.Time2SecondNumber(f.GetEndTime()) - pkg.Time2SecondNumber(f.GetStartTime())) * 100))
+}
+
+func (f FileInfo) GetFileSha256() string {
+	return fmt.Sprintf("%x", sha256.Sum256(f.Data))
 }
 
 // OneDialogue 一句对话

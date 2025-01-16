@@ -1,5 +1,5 @@
 <template>
-  <q-page class="q-pa-lg">
+  <q-page class="q-pa-lg movie-index">
     <div class="row q-gutter-md">
       <btn-dialog-library-refresh />
       <btn-dialog-media-server-subtitle-refresh />
@@ -16,8 +16,8 @@
     <q-separator class="q-my-md" />
 
     <div v-if="movies.length" class="row q-gutter-x-md q-gutter-y-lg">
-      <q-intersection v-for="item in filteredMovies" once :key="item.name" style="width: 160px; height: 280px">
-        <list-item-movie :data="item" />
+      <q-intersection v-for="item in filteredMovies" once :key="item.video_f_path" style="height: 280px">
+        <list-item-movie :data="item" width="180px" cover-height="220px" />
       </q-intersection>
     </div>
     <div v-else class="q-my-md text-grey">当前没有可用视频，点击"更新缓存"按钮可重建缓存</div>
@@ -25,10 +25,10 @@
 </template>
 
 <script setup>
-import { useLibrary } from 'pages/library/useLibrary';
+import { useLibrary } from 'pages/library/use-library';
 import { computed, reactive } from 'vue';
-import BtnDialogLibraryRefresh from 'pages/library/BtnDialogLibraryRefresh';
-import BtnDialogMediaServerSubtitleRefresh from 'pages/library/BtnDialogMediaServerSubtitleRefresh';
+import BtnDialogLibraryRefresh from 'pages/library/BtnLibraryRefresh';
+import BtnDialogMediaServerSubtitleRefresh from 'pages/library/BtnMediaServerSubtitleRefresh';
 import ListItemMovie from './ListItemMovie';
 
 const filterForm = reactive({

@@ -1,8 +1,8 @@
 package settings
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 )
 
 type AdvancedSettings struct {
@@ -25,7 +25,7 @@ type AdvancedSettings struct {
 func NewAdvancedSettings() *AdvancedSettings {
 	return &AdvancedSettings{
 		ProxySettings:     NewProxySettings(false, "http", local_http_proxy_server.LocalHttpProxyPort, "127.0.0.1", "10809", "", ""),
-		TmdbApiSettings:   *NewTmdbApiSettings(false, ""),
+		TmdbApiSettings:   *NewTmdbApiSettings(false, "", false),
 		CustomVideoExts:   make([]string, 0),
 		Topic:             common.DownloadSubsPerSite,
 		SuppliersSettings: NewSuppliersSettings(),

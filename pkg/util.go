@@ -24,12 +24,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/regex_things"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
@@ -228,6 +228,12 @@ func FileNameIsBDMV(id_bdmv_fileFPath string) (bool, string) {
 	return false, ""
 }
 
+// ResetWantedVideoExt 重置视频后缀名
+func ResetWantedVideoExt() {
+	_wantedExtMap = make(map[string]string)
+	_defExtMap = make(map[string]string)
+}
+
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
 
@@ -244,7 +250,7 @@ func IsWantedVideoExtDef(fileName string) bool {
 		_wantedExtMap[common.VideoExtIso] = common.VideoExtIso
 		_wantedExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
 
-		for _, videoExt := range _customVideoExts {
+		for _, videoExt := range settings.Get().AdvancedSettings.CustomVideoExts {
 			_wantedExtMap[videoExt] = videoExt
 		}
 	}
@@ -729,8 +735,24 @@ func GetMaxSizeFile(path string) string {
 	return filepath.Join(path, maxFile.Name())
 }
 
+func Sha256File(fileFPath string) (string, int, error) {
+	fp, err := os.Open(fileFPath)
+	if err != nil {
+		return "", 0, err
+	}
+	defer func() {
+		_ = fp.Close()
+	}()
+
+	partAll, err := io.ReadAll(fp)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return fmt.Sprintf("%x", sha256.Sum256(partAll)), len(partAll), nil
+}
+
 var (
-	_wantedExtMap    = make(map[string]string) // 人工确认的需要监控的视频后缀名
-	_defExtMap       = make(map[string]string) // 内置支持的视频后缀名列表
-	_customVideoExts = make([]string, 0)       // 用户额外自定义的视频后缀名列表
+	_wantedExtMap = make(map[string]string) // 人工确认的需要监控的视频后缀名
+	_defExtMap    = make(map[string]string) // 内置支持的视频后缀名列表
 )

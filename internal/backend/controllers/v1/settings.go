@@ -1,12 +1,13 @@
 package v1
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,6 +39,7 @@ func (cb *ControllerBase) SettingsHandler(c *gin.Context) {
 			if err != nil {
 				return
 			}
+			pkg.ResetWantedVideoExt()
 			// ----------------------------------------
 			// 设置接口的 API TOKEN
 			if settings.Get().ExperimentalFunction.ApiKeySettings.Enabled == true {

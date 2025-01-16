@@ -2,18 +2,19 @@ package sub_supplier
 
 import (
 	"path/filepath"
+	"sync"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/media_info_dealers"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/ifaces"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/emby"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/series"
 
-	movieHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/movie_helper"
-	seriesHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+	movieHelper "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/movie_helper"
+	seriesHelper "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/series_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/errgo.v2/fmt/errors"
 )
@@ -21,6 +22,7 @@ import (
 type SubSupplierHub struct {
 	log       *logrus.Logger
 	Suppliers []ifaces.ISupplier
+	locker    sync.Mutex
 }
 
 func NewSubSupplierHub(one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
@@ -186,22 +188,32 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 		SubSiteStatus: make([]backend.SiteStatus, 0),
 	}
 
+	var wg sync.WaitGroup
+
 	// 测试提供字幕的网站是有效的
 	d.log.Infoln("Check Sub Supplier Start...")
 	for _, supplier := range d.Suppliers {
-		bAlive, speed := supplier.CheckAlive()
-		if bAlive == false {
-			d.log.Warningln(supplier.GetSupplierName(), "Check Alive = false")
-		} else {
-			d.log.Infoln(supplier.GetSupplierName(), "Check Alive = true, Speed =", speed, "ms")
-		}
+		wg.Add(1)
+		go func(supplier ifaces.ISupplier) {
+			defer wg.Done()
+			bAlive, speed := supplier.CheckAlive()
+			if bAlive == false {
+				d.log.Warningln(supplier.GetSupplierName(), "Check Alive = false")
+			} else {
+				d.log.Infoln(supplier.GetSupplierName(), "Check Alive = true, Speed =", speed, "ms")
+			}
 
-		outStatus.SubSiteStatus = append(outStatus.SubSiteStatus, backend.SiteStatus{
-			Name:  supplier.GetSupplierName(),
-			Valid: bAlive,
-			Speed: speed,
-		})
+			d.locker.Lock()
+			outStatus.SubSiteStatus = append(outStatus.SubSiteStatus, backend.SiteStatus{
+				Name:  supplier.GetSupplierName(),
+				Valid: bAlive,
+				Speed: speed,
+			})
+			d.locker.Unlock()
+		}(supplier)
 	}
+	// 等待所有的检测完成
+	wg.Wait()
 
 	suppliersLen := len(d.Suppliers)
 	for i := 0; i < suppliersLen; {

@@ -2,18 +2,19 @@ package backend
 
 import (
 	"fmt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/pre_job"
 	"net/http"
 
 	"github.com/arl/statsviz"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/tmdb_api"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/tmdb_api"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
-	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
-	"github.com/allanpk716/ChineseSubFinder/internal/backend/middle"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/backend/controllers/base"
+	v1 "github.com/ChineseSubFinder/ChineseSubFinder/internal/backend/controllers/v1"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/backend/middle"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/cron_helper"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,6 +22,7 @@ func InitRouter(
 	router *gin.Engine,
 	cronHelper *cron_helper.CronHelper,
 	restartSignal chan interface{},
+	preJob *pre_job.PreJob,
 ) (*base.ControllerBase, *v1.ControllerBase) {
 
 	// ----------------------------------------------
@@ -30,7 +32,7 @@ func InitRouter(
 	if settings.Get().AdvancedSettings.TmdbApiSettings.Enable == true &&
 		settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey != "" {
 
-		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey)
+		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey, settings.Get().AdvancedSettings.TmdbApiSettings.UseAlternateBaseURL)
 		if err != nil {
 			cronHelper.Logger.Panicln("NewTmdbHelper", err)
 		}
@@ -42,7 +44,7 @@ func InitRouter(
 	}
 	cronHelper.FileDownloader.MediaInfoDealers.SetTmdbHelperInstance(tmdbApi)
 	// ----------------------------------------------
-	cbBase := base.NewControllerBase(cronHelper.FileDownloader, restartSignal)
+	cbBase := base.NewControllerBase(cronHelper.FileDownloader, restartSignal, preJob)
 	cbV1 := v1.NewControllerBase(cronHelper, restartSignal)
 	// --------------------------------------------------
 	// 静态文件服务器
@@ -75,6 +77,8 @@ func InitRouter(
 	// --------------------------------------------------
 	// 基础的路由
 	router.GET("/system-status", cbBase.SystemStatusHandler)
+
+	router.POST("/pre-job", cbBase.PreJobHandler)
 
 	router.POST("/setup", cbBase.SetupHandler)
 
@@ -132,12 +136,13 @@ func InitRouter(
 		GroupV1.POST("/subtitles/manual_upload_result", cbV1.ManualUploadSubtitleResult)
 		GroupV1.GET("/subtitles/list_manual_upload_2_local_job", cbV1.ListManualUploadSubtitle2LocalJob)
 		GroupV1.POST("/subtitles/is_manual_upload_2_local_in_queue", cbV1.IsManualUploadSubtitle2LocalJobInQueue)
+		GroupV1.POST("/subtitles/get_generate_upload_url_info", cbV1.GetGenerateUploadURLHandle)
 
 		GroupV1.POST("/preview/clean_up", cbV1.PreviewCleanUp)
 		GroupV1.GET("/preview/playlist/:videofpathbase64", cbV1.HlsPlaylist)
 		GroupV1.GET("/preview/segments/:resolution/:segment/:videofpathbase64", cbV1.HlsSegment)
 		GroupV1.POST("/preview/search_other_web", cbV1.PreviewSearchOtherWeb)
-
+		GroupV1.POST("/preview/video_f_path_2_imdb_info", cbV1.PreviewVideoFPath2IMDBInfo)
 	}
 
 	GroupAPIV1 := router.Group("/api/v1")

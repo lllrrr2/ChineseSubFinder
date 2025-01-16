@@ -9,19 +9,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/supplier"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/archive_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/filter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/pkg/vad"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/archive_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/filter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/regex_things"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/vad"
 	"github.com/sirupsen/logrus"
 )
 
@@ -256,7 +256,7 @@ func SearchMatchedSubFileByDir(log *logrus.Logger, dir string) ([]string, error)
 			}
 		} else {
 			// 这里就是文件了
-			if filter.SkipFileInfo(log, curFile) == true {
+			if filter.SkipFileInfo(log, curFile, fullPath) == true {
 				continue
 			}
 
@@ -287,7 +287,8 @@ func SearchMatchedSubFileByOneVideo(l *logrus.Logger, oneVideoFullPath string) (
 			continue
 		}
 		// 这里就是文件了
-		if filter.SkipFileInfo(l, curFile) == true {
+		oldPath := dir + pathSep + curFile.Name()
+		if filter.SkipFileInfo(l, curFile, oldPath) == true {
 			continue
 		}
 
@@ -302,7 +303,6 @@ func SearchMatchedSubFileByOneVideo(l *logrus.Logger, oneVideoFullPath string) (
 			continue
 		}
 
-		oldPath := dir + pathSep + curFile.Name()
 		matchedSubs = append(matchedSubs, oldPath)
 	}
 
@@ -326,7 +326,8 @@ func SearchVideoMatchSubFileAndRemoveExtMark(l *logrus.Logger, oneVideoFullPath 
 			continue
 		} else {
 			// 这里就是文件了
-			if filter.SkipFileInfo(l, curFile) == true {
+			oldPath := dir + pathSep + curFile.Name()
+			if filter.SkipFileInfo(l, curFile, oldPath) == true {
 				continue
 			}
 			// 判断的时候用小写的，后续重命名的时候用原有的名称
@@ -343,7 +344,6 @@ func SearchVideoMatchSubFileAndRemoveExtMark(l *logrus.Logger, oneVideoFullPath 
 			if strings.Contains(nowFileName, subparser.Sub_Ext_Mark_Default+".") == true {
 				// 得包含 .default. 找个关键词
 				// 去除 .default.
-				oldPath := dir + pathSep + curFile.Name()
 				newPath := dir + pathSep + strings.ReplaceAll(curFile.Name(), subparser.Sub_Ext_Mark_Default+".", ".")
 				err = os.Rename(oldPath, newPath)
 				if err != nil {

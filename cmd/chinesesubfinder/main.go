@@ -6,21 +6,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/pre_job"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/cron_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
-
-	"github.com/allanpk716/ChineseSubFinder/internal/backend"
-	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
 )
 
@@ -60,7 +58,8 @@ func init() {
 		AppVersion += " Lite"
 		pkg.SetLiteMode(true)
 	} else {
-		pkg.SetLiteMode(false)
+		// 强制设置为 Lite 模式，取消 Chrome 的相关功能，交给外部的爬虫解决
+		pkg.SetLiteMode(true)
 	}
 
 	loggerBase.Infoln("ChineseSubFinder Version:", AppVersion)
@@ -91,71 +90,55 @@ func main() {
 
 	// ------------------------------------------------------------------------
 	// 如果是 Debug 模式，那么就需要写入特殊文件
-	if settings.Get().AdvancedSettings.DebugMode == true {
-		err := log_helper.WriteDebugFile()
-		if err != nil {
-			loggerBase.Errorln("log_helper.WriteDebugFile " + err.Error())
+	{
+		if settings.Get().AdvancedSettings.DebugMode == true {
+			err := log_helper.WriteDebugFile()
+			if err != nil {
+				loggerBase.Errorln("log_helper.WriteDebugFile " + err.Error())
+			}
+			loggerBase = newLog()
+			loggerBase.Infoln("Reload Log Settings, level = Debug")
+		} else {
+			err := log_helper.DeleteDebugFile()
+			if err != nil {
+				loggerBase.Errorln("log_helper.DeleteDebugFile " + err.Error())
+			}
+			loggerBase = newLog()
+			loggerBase.Infoln("Reload Log Settings, level = Info")
 		}
-		loggerBase = newLog()
-		loggerBase.Infoln("Reload Log Settings, level = Debug")
-	} else {
-		err := log_helper.DeleteDebugFile()
-		if err != nil {
-			loggerBase.Errorln("log_helper.DeleteDebugFile " + err.Error())
+		if pkg.LinuxConfigPathInSelfPath() != "" {
+
+			loggerBase.Infoln("SetLinuxConfigPathInSelfPath:", pkg.LinuxConfigPathInSelfPath())
+
+			if pkg.IsDir(pkg.LinuxConfigPathInSelfPath()) == false {
+				// 如果设置了这个路径，但是不存在则会崩溃
+				loggerBase.Panicln("LinuxConfigPathInSelfPath", pkg.LinuxConfigPathInSelfPath(), "is not dir")
+			}
 		}
-		loggerBase = newLog()
-		loggerBase.Infoln("Reload Log Settings, level = Info")
 	}
-	if pkg.LinuxConfigPathInSelfPath() != "" {
-
-		loggerBase.Infoln("SetLinuxConfigPathInSelfPath:", pkg.LinuxConfigPathInSelfPath())
-
-		if pkg.IsDir(pkg.LinuxConfigPathInSelfPath()) == false {
-			// 如果设置了这个路径，但是不存在则会崩溃
-			loggerBase.Panicln("LinuxConfigPathInSelfPath", pkg.LinuxConfigPathInSelfPath(), "is not dir")
-		}
-	}
-
 	// ------------------------------------------------------------------------
 	// 设置接口的 API TOKEN
-	if settings.Get().ExperimentalFunction.ApiKeySettings.Enabled == true {
-		common.SetApiToken(settings.Get().ExperimentalFunction.ApiKeySettings.Key)
-	} else {
-		common.SetApiToken("")
-	}
-	// 是否开启开发模式，跳过某些流程
-	settings.Get().SpeedDevMode = false
-	err := settings.Get().Save()
-	if err != nil {
-		loggerBase.Panicln("settings.Get().Save() err:", err)
-	}
-	if settings.Get().SpeedDevMode == true {
-		loggerBase.Infoln("Speed Dev Mode is On")
-		pkg.SetLiteMode(true)
-	} else {
-		loggerBase.Infoln("Speed Dev Mode is Off")
+	{
+		if settings.Get().ExperimentalFunction.ApiKeySettings.Enabled == true {
+			common.SetApiToken(settings.Get().ExperimentalFunction.ApiKeySettings.Key)
+		} else {
+			common.SetApiToken("")
+		}
+		// 是否开启开发模式，跳过某些流程
+		settings.Get().SpeedDevMode = false
+		err := settings.Get().Save()
+		if err != nil {
+			loggerBase.Panicln("settings.Get().Save() err:", err)
+		}
+		if settings.Get().SpeedDevMode == true {
+			loggerBase.Infoln("Speed Dev Mode is On")
+			pkg.SetLiteMode(true)
+		} else {
+			loggerBase.Infoln("Speed Dev Mode is Off")
+		}
 	}
 	// ------------------------------------------------------------------------
-	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	if settings.Get().SpeedDevMode == false {
-		pj := pre_job.NewPreJob(loggerBase)
-
-		if pkg.LiteMode() == true {
-			// 不启用 Chrome 相关操作
-			err := pj.HotFix().ChangeSubNameFormat().Wait()
-			if err != nil {
-				loggerBase.Panicln("pre_job", err)
-			}
-		} else {
-			// 完整版模式，启用 Chrome 相关操作
-			err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
-			if err != nil {
-				loggerBase.Panicln("pre_job", err)
-			}
-		}
-
-	}
-	// ----------------------------------------------
+	// 改进为优先启动 http server，这样后面的初始化操作的进度，就不会跟之前一样，无法把进度呈现到 Web 前端给用户看
 	fileDownloader := file_downloader.NewFileDownloader(
 		cache_center.NewCacheCenter("local_task_queue", loggerBase),
 		random_auth_key.AuthKey{
@@ -164,20 +147,11 @@ func main() {
 			AESIv16:  pkg.AESIv16(),
 		})
 	// ----------------------------------------------
+	// 定时任务实例
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
-	if settings.Get().UserInfo.Username == "" || settings.Get().UserInfo.Password == "" {
-		// 如果没有完成，那么就不开启
-		loggerBase.Infoln("Need do Setup")
-	} else {
-		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
-		go func() {
-			loggerBase.Infoln("Setup is Done")
-			cronHelper.Start(settings.Get().CommonSettings.RunScanAtStartUp)
-		}()
-	}
-
-	nowPort := pkg.ReadCustomPortFile(loggerBase)
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
+	nowPort := pkg.ReadCustomPortFile(loggerBase)
+	// 重启的信号
 	restartSignal := make(chan interface{}, 1)
 	defer close(restartSignal)
 	bend := backend.NewBackEnd(loggerBase, cronHelper, nowPort, restartSignal)
@@ -198,7 +172,7 @@ var ExtEnCode = "abcdefg1234567890"
 // 针对制作群晖的 SPK 应用，无法写入默认的 /config 目录而给出的新的编译条件，直接指向这个目录到当前程序的目录
 var setLinuxConfigPathInSelfPathFlag = flag.String("setconfigselfpath", "", "针对制作群晖的 SPK 应用，无法写入默认的 /config 目录而给出的新的编译条件，直接指向这个目录到当前程序的目录")
 
-var setLiteModeFlag = flag.Bool("litemode", false, "设置为 Lite 模式，不启用 Chrome 相关操作")
+var setLiteModeFlag = flag.Bool("litemode", true, "设置为 Lite 模式，不启用 Chrome 相关操作")
 
 var (
 	BaseKey  = "0123456789123456789" // 基础的密钥，密钥会基于这个基础的密钥生成

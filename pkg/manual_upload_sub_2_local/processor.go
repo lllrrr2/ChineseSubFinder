@@ -1,24 +1,21 @@
 package manual_upload_sub_2_local
 
 import (
-	"path/filepath"
 	"sync"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/scan_logic"
-	PTN "github.com/middelink/go-parse-torrent-name"
-
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/scan_logic"
 	"github.com/pkg/errors"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/save_sub_helper"
-	subCommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/save_sub_helper"
+	subCommon "github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/ass"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
 
 	"github.com/sirupsen/logrus"
 
@@ -220,14 +217,7 @@ func (m *ManualUploadSub2Local) processSub(job *Job) error {
 			return err
 		}
 		// 默认设置这个视频“跳过”（跳过扫描和下载字幕）属性
-		var parse *PTN.TorrentInfo
-		parse, err = PTN.Parse(job.VideoFPath)
-		if err != nil {
-			err = errors.New("processSub.PTN.Parse:" + err.Error())
-			return err
-		}
-		dirFPath := filepath.Dir(filepath.Dir(job.VideoFPath))
-		skipInfo = models.NewSkipScanInfoBySeries(dirFPath, parse.Season, parse.Episode, true)
+		skipInfo = models.NewSkipScanInfoBySeriesEx(job.VideoFPath, true)
 	}
 
 	m.scanLogic.Set(skipInfo)

@@ -1,17 +1,18 @@
 package normal
 
 import (
+	"github.com/WQGroup/logger"
 	"path/filepath"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 
-	subCommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
+	subCommon "github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
 )
 
 func TestFormatter_GetFormatterName(t *testing.T) {
-	f := NewFormatter()
+	f := NewFormatter(logger.GetLogger())
 	if f.GetFormatterName() != subCommon.FormatterNameString_Normal {
 		t.Errorf("GetFormatterName error")
 	}

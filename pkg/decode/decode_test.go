@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/unit_test_helper"
 )
 
 func TestGetImdbAndYearMovieXml(t *testing.T) {
@@ -74,6 +74,19 @@ func Test_getImdbAndYearNfo(t *testing.T) {
 				ImdbId:      "tt1856010",
 				Title:       "House of Cards (US)",
 				ReleaseDate: "2013-02-01",
+			},
+			wantErr: false,
+		},
+		{
+			name: "tvshow_00 (63).nfo", args: args{
+				nfoFilePath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"nfo_files", "tvshow"}, 3, false), "tvshow_00 (63).nfo"),
+				rootKey:     "tvshow",
+			},
+			want: types.VideoNfoInfo{
+				ImdbId:      "tt3581920",
+				TVdbId:      "392256",
+				Title:       "The Last of Us",
+				ReleaseDate: "2023-01-15",
 			},
 			wantErr: false,
 		},

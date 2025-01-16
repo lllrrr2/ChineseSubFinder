@@ -3,26 +3,27 @@ package pre_job
 import (
 	"errors"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types"
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types"
+	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/hot_fix"
-	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/hot_fix"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/sirupsen/logrus"
 )
 
 type PreJob struct {
-	stageName string
-	gError    error
-	log       *logrus.Logger
+	stageName     string
+	gError        error
+	isDone        bool
+	log           *logrus.Logger
+	renameResults sub_formatter.RenameResults
 }
 
 func NewPreJob(log *logrus.Logger) *PreJob {
-	return &PreJob{log: log}
+	return &PreJob{log: log, isDone: false}
 }
 
 func (p *PreJob) HotFix() *PreJob {
@@ -71,12 +72,13 @@ func (p *PreJob) ChangeSubNameFormat() *PreJob {
 		然后需要在数据库中记录本次的转换结果
 	*/
 	p.log.Infoln(common2.NotifyStringTellUserWait)
-	renameResults, err := sub_formatter.SubFormatChangerProcess(p.log,
+	var err error
+	p.renameResults, err = sub_formatter.SubFormatChangerProcess(p.log,
 		settings.Get().CommonSettings.MoviePaths,
 		settings.Get().CommonSettings.SeriesPaths,
 		common.FormatterName(settings.Get().AdvancedSettings.SubNameFormatter))
 	// 出错的文件有哪一些
-	for s, i := range renameResults.ErrFiles {
+	for s, i := range p.renameResults.ErrFiles {
 		p.log.Errorln("reformat ErrFile:"+s, i)
 	}
 	if err != nil {
@@ -88,24 +90,9 @@ func (p *PreJob) ChangeSubNameFormat() *PreJob {
 	return p
 }
 
-func (p *PreJob) ReloadBrowser() *PreJob {
-
-	if p.gError != nil {
-		p.log.Infoln("Skip PreJob.ReloadBrowser()")
-		return p
-	}
-	defer func() {
-		p.log.Infoln("PreJob.ReloadBrowser() End")
-	}()
-	p.log.Infoln("PreJob.ReloadBrowser() Start...")
-	// ------------------------------------------------------------------------
-	// ReloadBrowser 提前把浏览器下载好
-	rod_helper.ReloadBrowser(p.log)
-	return p
-}
-
 func (p *PreJob) Wait() error {
 	defer func() {
+		p.isDone = true
 		p.log.Infoln("PreJob.Wait() Done.")
 	}()
 	if p.gError != nil {
@@ -115,6 +102,22 @@ func (p *PreJob) Wait() error {
 	} else {
 		return nil
 	}
+}
+
+func (p *PreJob) GetStageName() string {
+	return p.stageName
+}
+
+func (p *PreJob) IsDone() bool {
+	return p.isDone
+}
+
+func (p *PreJob) GetRenameResults() sub_formatter.RenameResults {
+	return p.renameResults
+}
+
+func (p *PreJob) GetGError() error {
+	return p.gError
 }
 
 const (

@@ -3,25 +3,25 @@ package pre_download_process
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/subtitle_best"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/csf"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
+	subSupplier "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/something_static"
-	"github.com/allanpk716/ChineseSubFinder/pkg/url_connectedness_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/notify_center"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/something_static"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/url_connectedness_helper"
 	"github.com/sirupsen/logrus"
 )
 
@@ -111,15 +111,16 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			a4k.NewSupplier(p.fileDownloader),
 		)
 
-		if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
-			// 如果开启了分享字幕功能，那么就可以开启这个功能
-			p.SubSupplierHub.AddSubSupplier(csf.NewSupplier(p.fileDownloader))
-		}
-
 		if settings.Get().SubtitleSources.AssrtSettings.Enabled == true &&
 			settings.Get().SubtitleSources.AssrtSettings.Token != "" {
 			// 如果开启了 ASSRt 字幕源，则需要新增
 			p.SubSupplierHub.AddSubSupplier(assrt.NewSupplier(p.fileDownloader))
+		}
+
+		if settings.Get().SubtitleSources.SubtitleBestSettings.Enabled == true &&
+			settings.Get().SubtitleSources.SubtitleBestSettings.ApiKey != "" {
+			// 如果开启了 SubtitleBest 字幕源，则需要新增
+			p.SubSupplierHub.AddSubSupplier(subtitle_best.NewSupplier(p.fileDownloader))
 		}
 
 		if pkg.LiteMode() == false {

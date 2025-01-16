@@ -1,10 +1,10 @@
 <template>
-  <span @click="visible = true">
+  <span @click.stop="visible = true">
     <slot></slot>
   </span>
 
   <q-dialog v-model="visible">
-    <q-card style="width: 800px; max-width: 800px">
+    <q-card style="width: 900px; max-width: 900px">
       <q-card-section>
         <div class="text-h6">{{ data.name }} 剧集列表</div>
       </q-card-section>
@@ -58,6 +58,16 @@
             :disable="selection.length === 0"
             @click="skipAll(false)"
           ></q-btn>
+
+          <q-space />
+
+          <btn-dialog-search-subtitle
+            search-package
+            :package-episodes="currentTabEpisodes"
+            label="搜索本季字幕包"
+            size="md"
+          />
+          <btn-upload-multiple-for-tv :items="currentTabEpisodes" />
         </div>
 
         <q-tab-panels v-model="tab" animated>
@@ -70,7 +80,7 @@
                 <q-item-section>第 {{ pandStart2(item.episode) }} 集</q-item-section>
 
                 <q-item-section v-if="item.sub_f_path_list.length" side>
-                  <btn-dialog-preview-video :sub-list="item.sub_url_list" :path="item.video_f_path" />
+                  <btn-dialog-preview-video :subtitle-url-list="item.sub_url_list" :path="item.video_f_path" />
                 </q-item-section>
 
                 <q-item-section side>
@@ -94,7 +104,7 @@
                   >
                     <q-popup-proxy anchor="top right">
                       <q-list dense>
-                        <q-item v-for="(item1, index) in item.sub_f_path_list" :key="item1">
+                        <q-item v-for="(item1, index) in item.sub_url_list" :key="item1">
                           <q-item-section side>{{ index + 1 }}.</q-item-section>
 
                           <q-item-section class="overflow-hidden ellipsis" :title="item1.split(/\/|\\/).pop()">
@@ -102,11 +112,37 @@
                               item1.split(/\/|\\/).pop()
                             }}</a>
                           </q-item-section>
+                          <q-item-section side>
+                            <q-btn
+                              color="primary"
+                              round
+                              flat
+                              dense
+                              icon="construction"
+                              :title="`字幕时间轴校准${
+                                !formModel.advanced_settings.fix_time_line
+                                  ? '（此功能需要在进阶设置里开启自动校正字幕时间轴，检测到你当前尚未开启此选项）'
+                                  : ''
+                              }`"
+                              @click="doFixSubtitleTimeline(item1)"
+                              :disable="!formModel.advanced_settings.fix_time_line"
+                            ></q-btn>
+                          </q-item-section>
                         </q-item>
                       </q-list>
                     </q-popup-proxy>
                   </q-btn>
                   <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
+                </q-item-section>
+
+                <q-item-section side>
+                  <btn-dialog-search-subtitle
+                    size="md"
+                    round
+                    :path="item.video_f_path"
+                    :season="item.season"
+                    :episode="item.episode"
+                  />
                 </q-item-section>
 
                 <q-item-section side>
@@ -133,15 +169,19 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 import config from 'src/config';
 import { useQuasar } from 'quasar';
-import { useSelection } from 'src/composables/useSelection';
+import { useSelection } from 'src/composables/use-selection';
 import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import eventBus from 'vue3-eventbus';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
+import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
+import BtnUploadMultipleForTv from 'pages/library/tvs/BtnUploadMultipleForTv';
+import { doFixSubtitleTimeline } from 'pages/library/use-library';
+import { formModel } from 'pages/settings/use-settings';
 
 const props = defineProps({
   data: Object,
@@ -174,7 +214,7 @@ const categoryVideos = computed(() => {
 const tab = ref(null);
 
 watch(categoryVideos, () => {
-  if (categoryVideos.value.length) {
+  if (categoryVideos.value.length && tab.value === null) {
     tab.value = categoryVideos.value[0].season;
   }
 });
@@ -246,27 +286,36 @@ const skipAll = async (isSkip) => {
     cancel: true,
     persistent: true,
   }).onOk(async () => {
-    const promises = selection.value.map(async (item) => {
-      const [, err] = await LibraryApi.setSkipInfo({
+    const [, err] = await LibraryApi.setSkipInfo({
+      video_skip_infos: selection.value.map((item) => ({
         video_type: VIDEO_TYPE_TV,
         physical_video_file_full_path: item.video_f_path,
         is_bluray: false,
         is_skip: isSkip,
-      });
-      if (err !== null) {
-        return Promise.reject(err);
-      }
-      eventBus.emit(`refresh-skip-status-${item.video_f_path}`);
-      return Promise.resolve();
+      })),
+    });
+    if (err !== null) {
+      SystemMessage.error(err.message);
+      return;
+    }
+    const [res, err2] = await LibraryApi.getSkipInfo({
+      video_skip_infos: selection.value.map((item) => ({
+        video_type: VIDEO_TYPE_TV,
+        physical_video_file_full_path: item.video_f_path,
+        is_bluray: false,
+        is_skip: true,
+      })),
+    });
+    if (err2 !== null) {
+      SystemMessage.error(err2.message);
+      return;
+    }
+
+    selection.value.forEach((item, index) => {
+      eventBus.emit(`refresh-skip-status-${item.video_f_path}`, res.is_skips[index]);
     });
 
-    const result = await Promise.allSettled(promises);
-
-    const successCount = result.filter((item) => item.status === 'fulfilled').length;
-    const errorCount = result.filter((item) => item.status === 'rejected').length;
-
-    const msg = `成功${isSkip ? '锁定' : '解锁'} ${successCount} 个视频${errorCount ? `，失败 ${errorCount} 个` : ''}`;
-    SystemMessage.success(msg);
+    SystemMessage.success('操作成功');
   });
 };
 
